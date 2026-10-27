@@ -138,7 +138,28 @@ int main() {
         //
         // Use SOFT_LIMIT_PERCENT and HARD_LIMIT_PERCENT to parameterize the green and red
         // line positions.
-        camera.setCameraCenter({player.position.x, WINDOW_HEIGHT * 0.5f});
+        // camera.setCameraCenter({player.position.x, WINDOW_HEIGHT * 0.5f});
+        // Camera tracking
+        const float softLeft = WINDOW_WIDTH * SOFT_LIMIT_PERCENT;
+        const float softRight = WINDOW_WIDTH * (1.f - SOFT_LIMIT_PERCENT);
+        const float hardLeft = WINDOW_WIDTH * HARD_LIMIT_PERCENT;
+        const float hardRight = WINDOW_WIDTH * (1.f - HARD_LIMIT_PERCENT);
+
+        sf::Vector2f playerScreen = camera.worldToWindow(player.position);
+
+        if (playerScreen.x < hardLeft) {
+            // Hard left limit: immediately keep the player at the red line.
+            camera.setCamera(player.position, {hardLeft, playerScreen.y});
+        } else if (playerScreen.x > hardRight) {
+            // Hard right limit: immediately keep the player at the red line.
+            camera.setCamera(player.position, {hardRight, playerScreen.y});
+        } else if (playerScreen.x < softLeft) {
+            // Soft left zone: gradually move the player toward the green line.
+            camera.translateWindow({(playerScreen.x - softLeft) * SOFT_CAMERA_ALPHA, 0.f});
+        } else if (playerScreen.x > softRight) {
+            // Soft right zone: gradually move the player toward the green line.
+            camera.translateWindow({(playerScreen.x - softRight) * SOFT_CAMERA_ALPHA, 0.f});
+        }
 
         worldView.setCenter(camera.getCameraCenter());
         window.clear(sf::Color::Black);
